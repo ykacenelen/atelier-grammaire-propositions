@@ -1,0 +1,304 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Atelier des propositions</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#1f6f5c"><script>window.__PWA__=true</script>
+
+<style>
+/* Mise en page : une colonne étroite, cartes à plat, barre d'actions collée en bas. */
+:root{
+  --bg:#f5f6f3; --surface:#ffffff; --fg:#1c2420; --muted:#5d6a63; --line:#dde2dc;
+  --accent:#1f6f5c; --accent-soft:#e3f1ec; --accent-fg:#ffffff;
+  --ok:#23703a; --ok-soft:#e4f3e8; --ko:#b13a2a; --ko-soft:#fbe9e6;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131917; --surface:#1b2320; --fg:#e8eeea; --muted:#9aa8a0; --line:#2b3631;
+  --accent:#5cc4a6; --accent-soft:#1d3a31; --accent-fg:#0d1512;
+  --ok:#74d08c; --ok-soft:#1b3323; --ko:#f08a79; --ko-soft:#3a201c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131917; --surface:#1b2320; --fg:#e8eeea; --muted:#9aa8a0; --line:#2b3631;
+  --accent:#5cc4a6; --accent-soft:#1d3a31; --accent-fg:#0d1512;
+  --ok:#74d08c; --ok-soft:#1b3323; --ko:#f08a79; --ko-soft:#3a201c; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5;
+  padding-block:20px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:640px;margin:0 auto}
+h1{font-size:1.35rem;line-height:1.25;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:.25rem 0 0;font-size:.95rem}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:18px 0 8px}
+.steps i{height:6px;border-radius:3px;background:var(--line)}
+.steps i.done{background:var(--accent)}
+.steps i.cur{background:var(--accent);opacity:.45}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.meta b{color:var(--fg)}
+details.memo{margin:14px 0 4px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+details.memo summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:.95rem}
+details.memo div{padding:0 14px 12px;font-size:.92rem;color:var(--muted)}
+details.memo p{margin:.45rem 0}
+details.memo strong{color:var(--fg)}
+.list{display:flex;flex-direction:column;gap:12px;margin:14px 0 16px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.q.ok{border-color:var(--ok);background:linear-gradient(var(--ok-soft),var(--ok-soft)),var(--surface)}
+.q.ko{border-color:var(--ko);background:linear-gradient(var(--ko-soft),var(--ko-soft)),var(--surface)}
+.qh{display:flex;gap:12px;align-items:baseline}
+.num{flex:none;min-width:1.6em;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.s{margin:0;font-size:1.05rem;min-width:0;overflow-wrap:anywhere}
+.opts,.chips{display:flex;flex-wrap:wrap;gap:8px}
+.opt{position:relative;flex:1 1 150px;min-width:0}
+.chip{position:relative;flex:1 1 120px;min-width:0}
+.opt input,.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt span,.chip span{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:.95rem;line-height:1.25}
+.opt span::before{content:"";flex:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--muted)}
+.chip span::before{content:"";flex:none;width:16px;height:16px;border-radius:4px;border:2px solid var(--muted)}
+.opt input:checked+span,.chip input:checked+span{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.opt input:checked+span::before{border-color:var(--accent);background:radial-gradient(var(--accent) 45%,transparent 50%)}
+.chip input:checked+span::before{border-color:var(--accent);background:var(--accent)}
+.opt input:focus-visible+span,.chip input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.opt input:disabled,.chip input:disabled{cursor:default}
+.opt input:disabled+span,.chip input:disabled+span{opacity:.75}
+.subs{display:flex;flex-direction:column;gap:8px;padding-left:12px;border-left:3px solid var(--accent-soft);animation:in .18s ease-out}
+.lbl{margin:0;color:var(--muted);font-size:.9rem}
+.fb{margin:0;font-size:.92rem;overflow-wrap:anywhere}
+.fb.ok{color:var(--ok)} .fb.ko{color:var(--ko);font-weight:600}
+.fb small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.bar{position:sticky;bottom:0;display:flex;gap:10px;align-items:center;background:var(--bg);
+  padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);margin-inline:-4px;padding-inline:4px}
+button{font:inherit;min-height:48px;padding:0 18px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-fg);font-weight:700;cursor:pointer;flex:1}
+button.alt{background:transparent;color:var(--accent)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.bar .info{flex:none;font-weight:700;font-variant-numeric:tabular-nums;min-width:4.2em;text-align:center}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin:8px 0}
+th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.85rem}
+td:last-child,th:last-child{text-align:right}
+.total{display:flex;align-items:baseline;gap:10px;margin:22px 0 4px}
+.total .big{font-size:3rem;font-weight:800;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.total span{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:16px}
+@media (prefers-reduced-motion:reduce){.subs{animation:none}}
+</style>
+</head><body><main id="app" aria-live="polite"></main>
+<script>
+(function(){
+"use strict";
+/* [phrase, drapeaux, explication]  drapeaux : '' = phrase simple ; c = coordonnées, j = juxtaposées, s = subordonnées */
+var BANK=[
+/* --- phrases simples --- */
+["Le gardien arrête le tir de l'attaquant.","","Un seul verbe conjugué (« arrête ») : une seule proposition."],
+["Les spectateurs applaudissent la gymnaste avec enthousiasme.","","Un seul verbe conjugué (« applaudissent ») : une seule proposition."],
+["Hier soir, le nageur a battu son record personnel.","","Un seul verbe conjugué (« a battu », temps composé) : une seule proposition."],
+["Dans le stade, la foule attend le début du match.","","Un seul verbe conjugué (« attend ») : une seule proposition."],
+["Le jury note la prestation de chaque candidat.","","Un seul verbe conjugué (« note ») : une seule proposition."],
+["Mon cousin joue au handball dans un club de la ville.","","Un seul verbe conjugué (« joue ») : une seule proposition."],
+["La joueuse de tennis prépare son service avec concentration.","","Un seul verbe conjugué (« prépare ») : une seule proposition."],
+["L'arbitre siffle une faute.","","Un seul verbe conjugué (« siffle ») : une seule proposition."],
+["Les cyclistes escaladent le col sous une pluie battante.","","Un seul verbe conjugué (« escaladent ») ; « battante » est un adjectif : une seule proposition."],
+["Cette équipe veut gagner le championnat.","","Un seul verbe conjugué (« veut ») ; « gagner » est à l'infinitif : une seule proposition."],
+["Le sauteur à la perche franchit la barre.","","Un seul verbe conjugué (« franchit ») : une seule proposition."],
+["Les élèves du collège participent au cross de l'établissement.","","Un seul verbe conjugué (« participent ») : une seule proposition."],
+["Un vent glacial souffle sur la montagne.","","Un seul verbe conjugué (« souffle ») : une seule proposition."],
+["La nuit tombe lentement sur le village endormi.","","Un seul verbe conjugué (« tombe ») ; « endormi » est un adjectif : une seule proposition."],
+["Le professeur de sport distribue les maillots aux joueurs.","","Un seul verbe conjugué (« distribue ») : une seule proposition."],
+["Les enfants regardent le feu d'artifice, émerveillés.","","Un seul verbe conjugué (« regardent ») ; « émerveillés » est un adjectif : la virgule ne sépare pas deux propositions."],
+["Le boulanger, un homme joyeux, salue chaque client.","","Un seul verbe conjugué (« salue ») ; « un homme joyeux » est une apposition : une seule proposition."],
+["Nous ne voulons pas rater le début du film.","","Un seul verbe conjugué (« voulons ») ; « rater » est à l'infinitif : une seule proposition."],
+["Dès l'aube, le pêcheur prépare ses filets.","","Un seul verbe conjugué (« prépare ») : une seule proposition."],
+["Le directeur du musée présente la nouvelle exposition au public.","","Un seul verbe conjugué (« présente ») : une seule proposition."],
+/* --- coordonnées --- */
+["Le nageur plonge et traverse le bassin en quelques secondes.","c","[Le nageur plonge] et [traverse le bassin en quelques secondes] : 2 propositions coordonnées par « et »."],
+["Je voulais sortir, mais la pluie tombait trop fort.","c","[Je voulais sortir], mais [la pluie tombait trop fort] : 2 propositions coordonnées par « mais » (la virgule accompagne la conjonction)."],
+["Tu peux prendre le bus ou tu peux venir à pied.","c","[Tu peux prendre le bus] ou [tu peux venir à pied] : 2 propositions coordonnées par « ou »."],
+["Il a beaucoup révisé, donc il réussira son évaluation.","c","[Il a beaucoup révisé], donc [il réussira son évaluation] : 2 propositions coordonnées par « donc »."],
+["Elle ne mange pas de viande et n'aime pas le poisson.","c","[Elle ne mange pas de viande] et [n'aime pas le poisson] : 2 propositions coordonnées par « et »."],
+["L'équipe a perdu le match car le gardien s'est blessé.","c","[L'équipe a perdu le match] car [le gardien s'est blessé] : 2 propositions coordonnées par « car »."],
+["Le ciel se couvre et le vent se lève.","c","[Le ciel se couvre] et [le vent se lève] : 2 propositions coordonnées par « et »."],
+["Marie adore le cinéma mais son frère préfère le théâtre.","c","[Marie adore le cinéma] mais [son frère préfère le théâtre] : 2 propositions coordonnées par « mais »."],
+["Nous irons à la mer ou nous visiterons la montagne.","c","[Nous irons à la mer] ou [nous visiterons la montagne] : 2 propositions coordonnées par « ou »."],
+["Les joueurs entrent sur le terrain et le public se lève.","c","[Les joueurs entrent sur le terrain] et [le public se lève] : 2 propositions coordonnées par « et »."],
+["Il pleuvait, mais nous avons quand même fait notre promenade.","c","[Il pleuvait], mais [nous avons quand même fait notre promenade] : 2 propositions coordonnées par « mais »."],
+["Le chat s'est caché sous le lit car le tonnerre grondait.","c","[Le chat s'est caché sous le lit] car [le tonnerre grondait] : 2 propositions coordonnées par « car »."],
+["Léa ouvre la fenêtre et respire l'air frais.","c","[Léa ouvre la fenêtre] et [respire l'air frais] : 2 propositions coordonnées par « et » (le sujet n'est pas répété)."],
+["Les équipes s'affrontent du regard et entrent sur le terrain car l'arbitre va siffler le coup d'envoi.","c","[Les équipes s'affrontent du regard] et [entrent sur le terrain] car [l'arbitre va siffler le coup d'envoi] : 3 propositions coordonnées par « et » et « car »."],
+/* --- juxtaposées --- */
+["La sprinteuse s'accroupit, pose ses mains sur la piste, relève la tête.","j","[La sprinteuse s'accroupit], [pose ses mains sur la piste], [relève la tête] : 3 propositions juxtaposées par des virgules."],
+["Il arrive, il salue, il s'assoit.","j","[Il arrive], [il salue], [il s'assoit] : 3 propositions juxtaposées par des virgules."],
+["J'ai froid : je ferme la fenêtre.","j","[J'ai froid] : [je ferme la fenêtre] : 2 propositions juxtaposées par les deux-points."],
+["Le soleil se couche ; les étoiles apparaissent.","j","[Le soleil se couche] ; [les étoiles apparaissent] : 2 propositions juxtaposées par un point-virgule."],
+["Les nuages s'accumulent, le vent forcit, l'orage approche.","j","[Les nuages s'accumulent], [le vent forcit], [l'orage approche] : 3 propositions juxtaposées."],
+["Tu cours, tu sautes, tu atterris dans le sable.","j","[Tu cours], [tu sautes], [tu atterris dans le sable] : 3 propositions juxtaposées."],
+["La cloche sonne, les élèves sortent de la classe.","j","[La cloche sonne], [les élèves sortent de la classe] : 2 propositions juxtaposées par une virgule."],
+["Il fait nuit, les rues sont désertes.","j","[Il fait nuit], [les rues sont désertes] : 2 propositions juxtaposées par une virgule."],
+["Elle ouvre le livre, lit la première page, sourit.","j","[Elle ouvre le livre], [lit la première page], [sourit] : 3 propositions juxtaposées (sujet non répété)."],
+["Le chef goûte la sauce, ajoute du sel, remue doucement.","j","[Le chef goûte la sauce], [ajoute du sel], [remue doucement] : 3 propositions juxtaposées."],
+["Je me tais ; il parle.","j","[Je me tais] ; [il parle] : 2 propositions juxtaposées par un point-virgule."],
+["Les portes s'ouvrent, la foule se précipite à l'intérieur.","j","[Les portes s'ouvrent], [la foule se précipite à l'intérieur] : 2 propositions juxtaposées."],
+["Le gardien plonge, détourne le ballon, rassure son équipe.","j","[Le gardien plonge], [détourne le ballon], [rassure son équipe] : 3 propositions juxtaposées."],
+["Il fait beau : nous partons en randonnée.","j","[Il fait beau] : [nous partons en randonnée] : 2 propositions juxtaposées par les deux-points."],
+["Le coureur s'accroupit, positionne ses mains sur le sol, relève la tête.","j","[Le coureur s'accroupit], [positionne ses mains sur le sol], [relève la tête] : 3 propositions juxtaposées par des virgules."],
+/* --- subordonnées --- */
+["La gymnaste qui salue le jury sourit.","s","Principale : « La gymnaste sourit ». Subordonnée relative : « qui salue le jury » (complète « gymnaste »)."],
+["Je pense que notre équipe va gagner.","s","Principale : « Je pense ». Subordonnée conjonctive complétive : « que notre équipe va gagner »."],
+["Quand la sirène retentit, les joueurs quittent le terrain.","s","Subordonnée conjonctive circonstancielle de temps : « Quand la sirène retentit ». Principale : « les joueurs quittent le terrain »."],
+["Le livre que tu m'as prêté est passionnant.","s","Principale : « Le livre est passionnant ». Subordonnée relative : « que tu m'as prêté »."],
+["Nous resterons à la maison si le temps est mauvais.","s","Principale : « Nous resterons à la maison ». Subordonnée conjonctive circonstancielle de condition : « si le temps est mauvais »."],
+["L'entraîneur affirme que ses joueurs sont prêts.","s","Principale : « L'entraîneur affirme ». Subordonnée conjonctive complétive : « que ses joueurs sont prêts »."],
+["La ville où j'ai grandi est au bord de la mer.","s","Principale : « La ville est au bord de la mer ». Subordonnée relative : « où j'ai grandi »."],
+["Elle sourit parce qu'elle a gagné la course.","s","Principale : « Elle sourit ». Subordonnée circonstancielle de cause : « parce qu'elle a gagné la course »."],
+["Dès que le soleil se lève, les oiseaux chantent.","s","Subordonnée circonstancielle de temps : « Dès que le soleil se lève ». Principale : « les oiseaux chantent »."],
+["Le film dont tu m'as parlé passe ce soir.","s","Principale : « Le film passe ce soir ». Subordonnée relative : « dont tu m'as parlé »."],
+["Je veux que tu viennes à ma fête.","s","Principale : « Je veux ». Subordonnée conjonctive complétive : « que tu viennes à ma fête »."],
+["Les spectateurs applaudissent lorsque l'équipe marque un but.","s","Principale : « Les spectateurs applaudissent ». Subordonnée circonstancielle de temps : « lorsque l'équipe marque un but »."],
+["Le joueur que l'entraîneur a choisi est très motivé.","s","Principale : « Le joueur est très motivé ». Subordonnée relative : « que l'entraîneur a choisi »."],
+["Bien qu'il soit fatigué, le coureur continue sa course.","s","Subordonnée circonstancielle de concession : « Bien qu'il soit fatigué ». Principale : « le coureur continue sa course »."],
+["Elle ignorait que le match avait été reporté.","s","Principale : « Elle ignorait ». Subordonnée conjonctive complétive : « que le match avait été reporté »."],
+["Le chien aboie quand le facteur arrive.","s","Principale : « Le chien aboie ». Subordonnée circonstancielle de temps : « quand le facteur arrive »."],
+["La gymnaste, qui achève son saut périlleux, sourit aux spectateurs et au jury.","s","Principale : « La gymnaste sourit aux spectateurs et au jury ». Subordonnée relative : « qui achève son saut périlleux ». Attention : « et » relie ici deux groupes nominaux (« aux spectateurs », « au jury »), pas deux propositions."],
+["La précision avec laquelle il manie son épée est remarquable.","s","Principale : « La précision est remarquable ». Subordonnée relative : « avec laquelle il manie son épée »."],
+/* --- mélanges --- */
+["Le public applaudit et la gymnaste, qui a réussi son saut, salue le jury.","cs","[Le public applaudit] et [la gymnaste salue le jury] : coordonnées par « et ». Dans la seconde : subordonnée relative « qui a réussi son saut »."],
+["Il pleut, mais je sortirai quand la pluie s'arrêtera.","cs","[Il pleut], mais [je sortirai] : coordonnées par « mais ». Subordonnée circonstancielle de temps : « quand la pluie s'arrêtera »."],
+["Le coureur s'accroupit, pose ses mains sur le sol et attend que l'arbitre siffle.","jcs","[Le coureur s'accroupit], [pose ses mains sur le sol] : juxtaposées. « et » coordonne [attend…]. Subordonnée complétive : « que l'arbitre siffle »."],
+["Je rentre, je m'assois parce que je suis fatigué.","js","[Je rentre], [je m'assois] : juxtaposées par une virgule. Subordonnée circonstancielle de cause : « parce que je suis fatigué »."],
+["Tu viens avec nous ou tu restes à la maison si tu es malade.","cs","[Tu viens avec nous] ou [tu restes à la maison] : coordonnées par « ou ». Subordonnée circonstancielle de condition : « si tu es malade »."],
+["Elle regarde la mer, elle respire et elle plonge parce que l'eau est tiède.","jcs","[Elle regarde la mer], [elle respire] : juxtaposées. « et » coordonne [elle plonge]. Subordonnée circonstancielle de cause : « parce que l'eau est tiède »."],
+["Le jardinier arrose les fleurs qui poussent près du mur, mais il oublie les rosiers.","cs","[Le jardinier arrose les fleurs], mais [il oublie les rosiers] : coordonnées par « mais ». Subordonnée relative : « qui poussent près du mur »."],
+["Nous espérons que le beau temps reviendra ; nous préparons déjà le pique-nique.","js","[Nous espérons…] ; [nous préparons déjà le pique-nique] : juxtaposées par un point-virgule. Subordonnée complétive : « que le beau temps reviendra »."],
+["Les élèves écoutent, le professeur explique la leçon qui sera évaluée demain.","js","[Les élèves écoutent], [le professeur explique la leçon] : juxtaposées par une virgule. Subordonnée relative : « qui sera évaluée demain »."],
+["L'orage approche, le ciel noircit et les promeneurs se dépêchent de rentrer.","jc","[L'orage approche], [le ciel noircit] : juxtaposées par une virgule. « et » coordonne [les promeneurs se dépêchent de rentrer]. Aucune subordonnée."]
+];
+var KEY="atelier-propositions-v1";
+var N=5,PER=10;
+var app=document.getElementById("app");
+var S=null;
+function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function pools(){var p={S:[],c:[],j:[],s:[],m:[]};BANK.forEach(function(q,i){var f=q[1];(f===""?p.S:f.length>1?p.m:p[f]).push(i)});return p}
+function pick(pool,n,seen){var cand=pool.filter(function(i){return seen.indexOf(i)<0});
+  if(cand.length<n){seen=seen.filter(function(i){return pool.indexOf(i)<0});cand=pool.slice()}
+  shuffle(cand);var r=cand.slice(0,n);r.forEach(function(i){seen.push(i)});return {r:r,seen:seen}}
+function newRound(seen,round){
+  var P=pools(),spec=[["S",3],["c",2],["j",2],["s",2],["m",1]],take={};
+  spec.forEach(function(x){var o=pick(P[x[0]],x[1]*N,seen);take[x[0]]=o.r;seen=o.seen});
+  var blocks=[];
+  for(var b=0;b<N;b++){var ids=[];spec.forEach(function(x){ids=ids.concat(take[x[0]].slice(b*x[1],b*x[1]+x[1]))});blocks.push(shuffle(ids))}
+  return {round:round,blocks:blocks,b:0,ans:{},res:{},scores:[null,null,null,null,null],tries:[0,0,0,0,0],last:null,phase:"quiz",seen:seen};
+}
+function ans(i){return S.ans[i]||(S.ans[i]={t:null,k:{c:false,j:false,s:false}})}
+function complete(){return S.blocks[S.b].every(function(i){var a=S.ans[i];return a&&a.t&&(a.t==="S"||a.k.c||a.k.j||a.k.s)})}
+function allOk(){return S.blocks[S.b].every(function(i){return S.res[i]==="ok"})}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function head(){
+  var h='<h1>Atelier des propositions</h1><p class="sub">Phrases simples et complexes · propositions coordonnées, juxtaposées, subordonnées</p>';
+  h+='<div class="steps" aria-hidden="true">';
+  for(var i=0;i<N;i++){h+='<i class="'+(S.phase==="result"||S.scores[i]!==null&&i<S.b||(i<S.b)?"done":(i===S.b?"cur":""))+'"></i>'}
+  return h+'</div>';
+}
+var MEMO='<details class="memo"><summary>Rappel de cours</summary><div>'+
+'<p><strong>Proposition</strong> : groupe de mots organisé autour d\'un verbe conjugué.</p>'+
+'<p><strong>Phrase simple</strong> : une seule proposition. <strong>Phrase complexe</strong> : au moins deux propositions.</p>'+
+'<p><strong>Juxtaposées</strong> : séparées par une ponctuation (virgule, point-virgule, deux-points), sans mot de liaison.</p>'+
+'<p><strong>Coordonnées</strong> : reliées par une conjonction de coordination (mais, ou, et, donc, or, ni, car).</p>'+
+'<p><strong>Subordonnée</strong> : dépend d\'une proposition principale ; introduite par un pronom relatif (qui, que, dont, où, lequel…) ou une conjonction de subordination (que, quand, si, parce que, bien que…).</p>'+
+'<p><strong>Astuce</strong> : compte les verbes conjugués. Un « et » entre deux groupes de mots sans verbe (« aux spectateurs et au jury ») ne coordonne pas deux propositions.</p></div></details>';
+function cardHTML(i){
+  var q=BANK[i],a=ans(i),r=S.res[i],locked=r==="ok";
+  var cls="q"+(r==="ok"?" ok":r?" ko":"");
+  var dis=locked?" disabled":"";
+  var h='<article class="'+cls+'" id="q'+i+'" data-i="'+i+'"><div class="qh"><span class="num">'+(S.blocks[S.b].indexOf(i)+1)+'</span><p class="s">'+esc(q[0])+'</p></div>';
+  h+='<div class="opts" role="radiogroup" aria-label="Nature de la phrase">';
+  h+='<label class="opt"><input type="radio" name="n'+i+'" value="S"'+(a.t==="S"?" checked":"")+dis+'><span>Phrase simple</span></label>';
+  h+='<label class="opt"><input type="radio" name="n'+i+'" value="C"'+(a.t==="C"?" checked":"")+dis+'><span>Phrase complexe</span></label></div>';
+  h+='<div class="subs"'+(a.t==="C"?"":" hidden")+'><p class="lbl">Elle contient des propositions…</p><div class="chips">';
+  [["c","coordonnées"],["j","juxtaposées"],["s","subordonnées"]].forEach(function(x){
+    h+='<label class="chip"><input type="checkbox" data-k="'+x[0]+'"'+(a.k[x[0]]?" checked":"")+dis+'><span>'+x[1]+'</span></label>'});
+  h+='</div></div><p class="fb" '+(r?"":"hidden")+'>'+fbText(i)+'</p></article>';
+  return h;
+}
+function fbText(i){
+  var r=S.res[i];if(!r)return"";
+  if(r==="ok")return '<span class="ok">✓ Correct.</span><small>'+esc(BANK[i][2])+'</small>';
+  if(r==="ko-t")return '✗ La nature de la phrase est à revoir. Combien de verbes conjugués ?';
+  return '✗ Phrase complexe, oui, mais les types de propositions sont à revoir.';
+}
+function renderQuiz(){
+  var ids=S.blocks[S.b];
+  var meta='<div class="meta"><span>Bloc <b>'+(S.b+1)+'</b> / '+N+'</span>'+
+    '<span>'+(S.tries[S.b]?'Essai '+S.tries[S.b]+' · dernière validation : <b>'+S.last+'/10</b>':'Réponds aux 10 phrases')+'</span></div>';
+  if(S.scores[S.b]!==null)meta+='<div class="meta"><span>Score enregistré (1er essai) : <b>'+S.scores[S.b]+'/10</b></span></div>';
+  var h=head()+meta+(S.b===0?MEMO:"")+'<div class="list">';
+  ids.forEach(function(i){h+=cardHTML(i)});
+  h+='</div><div class="bar"><button type="button" id="val">Valider</button><button type="button" class="alt" id="nxt">'+(S.b===N-1?"Résultat":"Suivant")+' →</button></div>';
+  app.innerHTML=h;
+  refreshBar();
+}
+function refreshBar(){
+  var v=document.getElementById("val"),n=document.getElementById("nxt");if(!v)return;
+  var ok=allOk();
+  v.disabled=!complete()||ok;
+  n.disabled=!ok;
+}
+function setMeta(){ /* met à jour la ligne d'état sans tout redessiner */
+  var m=app.querySelectorAll(".meta");
+  if(m[0])m[0].innerHTML='<span>Bloc <b>'+(S.b+1)+'</b> / '+N+'</span><span>Essai '+S.tries[S.b]+' · dernière validation : <b>'+S.last+'/10</b></span>';
+  if(S.scores[S.b]!==null){
+    var t='<span>Score enregistré (1er essai) : <b>'+S.scores[S.b]+'/10</b></span>';
+    if(m[1])m[1].innerHTML=t;else m[0].insertAdjacentHTML("afterend",'<div class="meta">'+t+'</div>');
+  }
+}
+function updateCard(i){
+  var el=document.getElementById("q"+i),a=ans(i);
+  el.querySelector(".subs").hidden=a.t!=="C";
+  if(S.res[i]&&S.res[i]!=="ok"){delete S.res[i];el.className="q";var f=el.querySelector(".fb");f.hidden=true;f.innerHTML=""}
+}
+function validate(){
+  var ids=S.blocks[S.b],ok=0;
+  ids.forEach(function(i){
+    if(S.res[i]==="ok"){ok++;return}
+    var q=BANK[i],a=ans(i),exp=q[1],good=false,why="t";
+    if(exp===""){good=a.t==="S"}
+    else if(a.t==="C"){why="k";var got=["c","j","s"].filter(function(x){return a.k[x]}).sort().join("");good=got===exp.split("").sort().join("")}
+    S.res[i]=good?"ok":"ko-"+why;if(good)ok++;
+  });
+  S.tries[S.b]++;S.last=ok;if(S.tries[S.b]===1)S.scores[S.b]=ok;
+  save();
+  ids.forEach(function(i){
+    var el=document.getElementById("q"+i),r=S.res[i];
+    el.className="q "+(r==="ok"?"ok":"ko");
+    var f=el.querySelector(".fb");f.hidden=false;f.className="fb "+(r==="ok"?"ok":"ko");f.innerHTML=fbText(i);
+    if(r==="ok")el.querySelectorAll("input").forEach(function(x){x.disabled=true});
+  });
+  setMeta();refreshBar();
+  var first=app.querySelector(".q.ko");
+  if(first)first.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function renderResult(){
+  var tot=S.scores.reduce(function(a,b){return a+(b||0)},0);
+  var h=head()+'<div class="total"><span class="big">'+tot+'</span><span>/ 50 · somme des scores du premier essai</span></div>';
+  var msg=tot>=45?"Excellent : tu maîtrises ces notions.":tot>=35?"Bien : encore un tour pour fixer les derniers pièges.":tot>=25?"Des bases solides, mais relis le rappel de cours puis recommence.":"Relis le rappel de cours, puis recommence : tu progresseras vite.";
+  h+='<p class="sub">'+msg+'</p><div class="card"><table><thead><tr><th>Bloc</th><th>Essais</th><th>Score (1er essai)</th></tr></thead><tbody>';
+  for(var i=0;i<N;i++)h+='<tr><td>Bloc '+(i+1)+'</td><td>'+S.tries[i]+'</td><td><b>'+S.scores[i]+' / 10</b></td></tr>';
+  h+='</tbody></table></div>'+MEMO+'<div class="bar"><button type="button" id="again">Recommencer</button></div>';
+  app.innerHTML=h;
+}
+function render(){window.scrollTo(0,0);if(S.phase==="result")renderResult();else renderQuiz()}
+app.addEventListener("change",function(e){
+  var t=e.target,card=t.closest(".q");if(!card)return;
+  var i=+card.getAttribute("data-i"),a=ans(i);
+  if(t.type==="radio"){a.t=t.value}
+  else if(t.getAttribute("data-k")){a.k[t.getAttribute("data-k")]=t.checked}
+  save();updateCard(i);refreshBar();
+});
+app.addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  if(b.id==="val")validate();
+  else if(b.id==="nxt"){if(S.b<N-1){S.b++;S.last=null}else S.phase="result";save();render()}
+  else if(b.id==="again"){S=newRound(S.seen,S.round+1);save();render()}
+});
+S=load();
+if(!S||!S.blocks||S.blocks.length!==N||S.blocks.some(function(b){return b.some(function(i){return !BANK[i]})}))S=newRound([],1);
+save();render();
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0&&window.__PWA__){navigator.serviceWorker.register("sw.js").catch(function(){})}
+})();
+</script>
+</body></html>
